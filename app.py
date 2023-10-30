@@ -90,41 +90,56 @@ with map_face_mesh.FaceMesh(min_detection_confidence =0.5, min_tracking_confiden
 
     # starting time here 
     start_time = time.time()
+    eopen_time = 0
+    eclose_time = 0
     # starting Video loop here.
     while True:
         frame_counter +=1 # frame counter
         ret, frame = camera.read() # getting frame from camera 
         if not ret: 
             break # no more frames break
+
         #  resizing frame
-        
         frame = cv.resize(frame, None, fx=1.5, fy=1.5, interpolation=cv.INTER_CUBIC)
         frame_height, frame_width= frame.shape[:2]
         rgb_frame = cv.cvtColor(frame, cv.COLOR_RGB2BGR)
         results  = face_mesh.process(rgb_frame)
+        
+        
         if results.multi_face_landmarks:
             mesh_coords = landmarksDetection(frame, results, True)
             ratio = blinkRatio(frame, mesh_coords, RIGHT_EYE, LEFT_EYE)
             # cv.putText(frame, f'ratio {ratio}', (100, 100), FONTS, 1.0, utils.GREEN, 2)
             utils.colorBackgroundText(frame,  f'Ratio : {round(ratio,2)}', FONTS, 0.7, (30,100),2, utils.PINK, utils.YELLOW)
-
-            if ratio >5.5:
+            
+            if ratio >6.5:
                 CEF_COUNTER +=1
+                eclose_time = time.time() - eopen_time
+
                 # cv.putText(frame, 'Blink', (200, 50), FONTS, 1.3, utils.PINK, 2)
                 # utils.colorBackgroundText(frame,  f'Blink', FONTS, 1.7, (int(frame_height/2), 100), 2, utils.YELLOW, pad_x=6, pad_y=6, )
-                utils.colorBackgroundText(frame,  f'AYAW PAG PIYONG', FONTS, 1.7, (int(frame_height/2), 100), 2, utils.YELLOW, pad_x=6, pad_y=6, )
-
+                
+                print(eclose_time)
             else:
+                eopen_time = time.time()
                 if CEF_COUNTER>CLOSED_EYES_FRAME:
                     TOTAL_BLINKS += 1
                     CEF_COUNTER = 0
 
+                if eclose_time > 2.5:
+                    utils.colorBackgroundText(frame,  f'AYAWG KATOG!!', FONTS, 1.7, (int(frame_height/2), 200), 2, utils.YELLOW, pad_x=6, pad_y=6, )
+                    
+            
+
+                    
 
             # cv.putText(frame, f'Total Blinks: {TOTAL_BLINKS}', (100, 150), FONTS, 0.6, utils.GREEN, 2)
             utils.colorBackgroundText(frame,  f'Total Blinks: {TOTAL_BLINKS}', FONTS, 0.7, (30,150),2)
-            
+            utils.colorBackgroundText(frame,  f'Eye Open(sec): {eopen_time}', FONTS, 0.7, (30,200),2)
+            utils.colorBackgroundText(frame,  f'Eye Close(sec): {eclose_time}', FONTS, 0.7, (30,250),2)
             cv.polylines(frame,  [np.array([mesh_coords[p] for p in LEFT_EYE ], dtype=np.int32)], True, utils.GREEN, 1, cv.LINE_AA)
             cv.polylines(frame,  [np.array([mesh_coords[p] for p in RIGHT_EYE ], dtype=np.int32)], True, utils.GREEN, 1, cv.LINE_AA)
+        
         # calculating  frame per seconds FPS
         end_time = time.time()-start_time
         fps = frame_counter/end_time
@@ -132,7 +147,7 @@ with map_face_mesh.FaceMesh(min_detection_confidence =0.5, min_tracking_confiden
         frame =utils.textWithBackground(frame,f'FPS: {round(fps,1)}',FONTS, 1.0, (30, 50), bgOpacity=0.9, textThickness=2)
         # writing image for thumbnail drawing shape
         # cv.imwrite(f'img/frame_{frame_counter}.png', frame)
-        
+        cv.imshow('cammera', frame)
         key = cv.waitKey(2)
         if key==ord('q') or key ==ord('Q'):
             break
