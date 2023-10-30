@@ -59,9 +59,6 @@ def blinkRatio(img, landmarks, right_indices, left_indices):
     # vertical line 
     rv_top = landmarks[right_indices[12]]
     rv_bottom = landmarks[right_indices[4]]
-    # draw lines on right eyes 
-    # cv.line(img, rh_right, rh_left, utils.GREEN, 2)
-    # cv.line(img, rv_top, rv_bottom, utils.WHITE, 2)
 
     # LEFT_EYE 
     # horizontal line 
@@ -92,6 +89,10 @@ with map_face_mesh.FaceMesh(min_detection_confidence =0.5, min_tracking_confiden
     start_time = time.time()
     eopen_time = 0
     eclose_time = 0
+
+    # deletable variables
+    last_close_sec = 0
+
     # starting Video loop here.
     while True:
         frame_counter +=1 # frame counter
@@ -106,37 +107,37 @@ with map_face_mesh.FaceMesh(min_detection_confidence =0.5, min_tracking_confiden
         results  = face_mesh.process(rgb_frame)
         
         
+        
         if results.multi_face_landmarks:
-            mesh_coords = landmarksDetection(frame, results, True)
+            mesh_coords = landmarksDetection(frame, results)
             ratio = blinkRatio(frame, mesh_coords, RIGHT_EYE, LEFT_EYE)
             # cv.putText(frame, f'ratio {ratio}', (100, 100), FONTS, 1.0, utils.GREEN, 2)
             utils.colorBackgroundText(frame,  f'Ratio : {round(ratio,2)}', FONTS, 0.7, (30,100),2, utils.PINK, utils.YELLOW)
             
-            if ratio >6.5:
+            if ratio >5:
                 CEF_COUNTER +=1
                 eclose_time = time.time() - eopen_time
-
+                last_close_sec = eclose_time
                 # cv.putText(frame, 'Blink', (200, 50), FONTS, 1.3, utils.PINK, 2)
                 # utils.colorBackgroundText(frame,  f'Blink', FONTS, 1.7, (int(frame_height/2), 100), 2, utils.YELLOW, pad_x=6, pad_y=6, )
                 
                 print(eclose_time)
             else:
                 eopen_time = time.time()
+                eclose_time = 0
+                
                 if CEF_COUNTER>CLOSED_EYES_FRAME:
                     TOTAL_BLINKS += 1
                     CEF_COUNTER = 0
-
+                
                 if eclose_time > 2.5:
                     utils.colorBackgroundText(frame,  f'AYAWG KATOG!!', FONTS, 1.7, (int(frame_height/2), 200), 2, utils.YELLOW, pad_x=6, pad_y=6, )
-                    
-            
-
-                    
 
             # cv.putText(frame, f'Total Blinks: {TOTAL_BLINKS}', (100, 150), FONTS, 0.6, utils.GREEN, 2)
             utils.colorBackgroundText(frame,  f'Total Blinks: {TOTAL_BLINKS}', FONTS, 0.7, (30,150),2)
             utils.colorBackgroundText(frame,  f'Eye Open(sec): {eopen_time}', FONTS, 0.7, (30,200),2)
             utils.colorBackgroundText(frame,  f'Eye Close(sec): {eclose_time}', FONTS, 0.7, (30,250),2)
+            utils.colorBackgroundText(frame,  f'Eye Close(sec): {last_close_sec}', FONTS, 0.7, (30,300),2)
             cv.polylines(frame,  [np.array([mesh_coords[p] for p in LEFT_EYE ], dtype=np.int32)], True, utils.GREEN, 1, cv.LINE_AA)
             cv.polylines(frame,  [np.array([mesh_coords[p] for p in RIGHT_EYE ], dtype=np.int32)], True, utils.GREEN, 1, cv.LINE_AA)
         
