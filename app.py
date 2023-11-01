@@ -16,7 +16,7 @@ eclose_time = 0
 # constants
 CLOSED_EYES_FRAME =3
 FONTS =cv.FONT_HERSHEY_COMPLEX
-blink_above_avg = 0.4
+blink_above_avg = 0.1
 
 
 # Left eyes indices 
@@ -26,6 +26,9 @@ LEFT_EYE =[ 362, 382, 381, 380, 374, 373, 390, 249, 263, 466, 388, 387, 386, 385
 # right eyes indices
 RIGHT_EYE=[ 33, 7, 163, 144, 145, 153, 154, 155, 133, 173, 157, 158, 159, 160, 161 , 246 ]  
 # RIGHT_EYEBROW=[ 70, 63, 105, 66, 107, 55, 65, 52, 53, 46 ]
+
+# inner lip indices
+INNER_LIP = [78,191,80,81,82,13,312,311,310,415,308,324,318,402,317,14,87,178,88,95]
 
 map_face_mesh = mp.solutions.face_mesh
 # camera object 
@@ -42,10 +45,13 @@ def landmarksDetection(img, results, draw=False):
     return mesh_coord
 
 # Euclaidean distance 
-def euclaideanDistance(point, point1):
+def euclaideanDistance(point, point1, zero = False):
     x, y = point
     x1, y1 = point1
-    return math.sqrt((x1 - x)**2 + (y1 - y)**2)
+    distance = math.sqrt((x1 - x)**2 + (y1 - y)**2)
+    if distance == 0 and zero:
+        distance = 0.00000001
+    return distance
 
 # Blinking Ratio
 def blinkRatio(img, landmarks, right_indices, left_indices):
@@ -79,12 +85,24 @@ def blinkRatio(img, landmarks, right_indices, left_indices):
     return ratio 
 
 
+def yawnRatio(img, landmarks, indeces):
+    # horizontal line
+    inner_right = landmarks[indeces[0]]
+    inner_left = landmarks[indeces[10]]
+
+    # vertical line
+    inner_top = landmarks[indeces[5]]
+    inner_bottom = landmarks[indeces[-5]]
+    
+    
+    return  euclaideanDistance(inner_right, inner_left, zero=True)/ euclaideanDistance(inner_top, inner_bottom, zero=True)
 
 with map_face_mesh.FaceMesh(min_detection_confidence =0.9, min_tracking_confidence=0.9) as face_mesh:
 
     # starting Video loop here.
     while True:
-        
+        frame_counter += 1
+
         ret, frame = camera.read() # getting frame from camera 
         if not ret: 
             break # no more frames break
@@ -99,13 +117,13 @@ with map_face_mesh.FaceMesh(min_detection_confidence =0.9, min_tracking_confiden
         
         if results.multi_face_landmarks:
             mesh_coords = landmarksDetection(frame, results)
-            ratio = blinkRatio(frame, mesh_coords, RIGHT_EYE, LEFT_EYE)
-            
-            if ratio >5.5:
+            blink = blinkRatio(frame, mesh_coords, RIGHT_EYE, LEFT_EYE) 
+
+
+            if blink > 5.5:
                 CEF_COUNTER +=1
                 eclose_time = time.time() - eopen_time
-                
-                print(eclose_time)
+                # print(eclose_time)
                 if eclose_time > blink_above_avg:
                     print("Stay Awake")
             else:
@@ -115,14 +133,17 @@ with map_face_mesh.FaceMesh(min_detection_confidence =0.9, min_tracking_confiden
                 if CEF_COUNTER>CLOSED_EYES_FRAME:
                     TOTAL_BLINKS += 1
                     CEF_COUNTER = 0
+                    
+            
+            # if yawnRatio(frame, mesh_coords, INNER_LIP) < 2:
+            #     print('YAWNING!!!!!!!!!!!!!!!!!!')
+            
+            
                 
                
         
-        # calculating  frame per seconds FPS
-
-        # frame =utils.textWithBackground(frame,f'FPS: {round(fps,1)}',FONTS, 1.0, (30, 50), bgOpacity=0.9, textThickness=2)
-        # key = cv.waitKey(2)
-        # if key==ord('q') or key ==ord('Q'):
-        #     break
+        
+        print(f'fps: {frame_counter/time.time()}')
+        
     cv.destroyAllWindows()
     camera.release()
