@@ -99,6 +99,7 @@ def yawnRatio(img, landmarks, indeces):
 
 with map_face_mesh.FaceMesh(min_detection_confidence =0.9, min_tracking_confidence=0.9) as face_mesh:
 
+    start_time = time.time()
     # starting Video loop here.
     while True:
         frame_counter += 1
@@ -120,7 +121,7 @@ with map_face_mesh.FaceMesh(min_detection_confidence =0.9, min_tracking_confiden
             blink = blinkRatio(frame, mesh_coords, RIGHT_EYE, LEFT_EYE) 
 
 
-            if blink > 5.5:
+            if blink > 5:
                 CEF_COUNTER +=1
                 eclose_time = time.time() - eopen_time
                 # print(eclose_time)
@@ -135,15 +136,10 @@ with map_face_mesh.FaceMesh(min_detection_confidence =0.9, min_tracking_confiden
                     CEF_COUNTER = 0
                     
             
-            # if yawnRatio(frame, mesh_coords, INNER_LIP) < 2:
-            #     print('YAWNING!!!!!!!!!!!!!!!!!!')
-            
-            
-                
-               
+            if yawnRatio(frame, mesh_coords, INNER_LIP) < 2:
+                print('YAWNING!!!!!!!!!!!!!!!!!!')
         
-        
-        print(f'fps: {frame_counter/time.time()}')
+        print(f'fps: {frame_counter/(time.time()- start_time)}')
         
     cv.destroyAllWindows()
     camera.release()
