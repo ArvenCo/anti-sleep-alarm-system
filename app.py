@@ -13,13 +13,6 @@ TOTAL_BLINKS =0
 CLOSED_EYES_FRAME =3
 FONTS =cv.FONT_HERSHEY_COMPLEX
 
-# face bounder indices 
-# FACE_OVAL=[ 10, 338, 297, 332, 284, 251, 389, 356, 454, 323, 361, 288, 397, 365, 379, 378, 400, 377, 152, 148, 176, 149, 150, 136, 172, 58, 132, 93, 234, 127, 162, 21, 54, 103,67, 109]
-
-# lips indices for Landmarks
-# LIPS=[ 61, 146, 91, 181, 84, 17, 314, 405, 321, 375,291, 308, 324, 318, 402, 317, 14, 87, 178, 88, 95,185, 40, 39, 37,0 ,267 ,269 ,270 ,409, 415, 310, 311, 312, 13, 82, 81, 42, 183, 78 ]
-# LOWER_LIPS =[61, 146, 91, 181, 84, 17, 314, 405, 321, 375, 291, 308, 324, 318, 402, 317, 14, 87, 178, 88, 95]
-# UPPER_LIPS=[ 185, 40, 39, 37,0 ,267 ,269 ,270 ,409, 415, 310, 311, 312, 13, 82, 81, 42, 183, 78] 
 
 # Left eyes indices 
 LEFT_EYE =[ 362, 382, 381, 380, 374, 373, 390, 249, 263, 466, 388, 387, 386, 385,384, 398 ]
@@ -31,6 +24,10 @@ RIGHT_EYE=[ 33, 7, 163, 144, 145, 153, 154, 155, 133, 173, 157, 158, 159, 160, 1
 
 
 OUTER_LIP = [61,185,40,39,37,0,267,269,270,409,291,375,321,405,314,17,84,181,91,146]
+
+
+FACE_BOUNDARY = [10,338,297,332,284,251,389,356,454,323,361,288,397,365,379,378,400,377,152,148,176,149,150,136,172,58,132,93,234,127,162,21,54,103,67,109]
+
 map_face_mesh = mp.solutions.face_mesh
 # camera object 
 camera = cv.VideoCapture(0)
@@ -85,7 +82,7 @@ def blinkRatio(img, landmarks, right_indices, left_indices):
     ratio = (reRatio+leRatio)/2
     return ratio 
 
-
+# Mouth Ratio
 def mouthRatio(landmarks, indices):
     # Right eyes 
     # horizontal line 
@@ -94,11 +91,18 @@ def mouthRatio(landmarks, indices):
     # vertical line 
     mv_top = landmarks[indices[5]]
     mv_bottom = landmarks[indices[-5]]
-
-
-
     return euclaideanDistance(mh_right, mh_left, True) / euclaideanDistance(mv_top, mv_bottom, True)
 
+
+def faceRatio(landmarks, indices):
+    fh_right = landmarks[indices[8]]
+    fh_left = landmarks[indices[28]]
+    
+    fv_top = landmarks[indices[0]]
+    fv_bottom = landmarks[indices[18]]
+
+    
+    return euclaideanDistance(fh_right, fh_left) / euclaideanDistance(fv_top, fv_bottom)
 
 
 with map_face_mesh.FaceMesh(min_detection_confidence =0.5, min_tracking_confidence=0.5) as face_mesh:
@@ -157,10 +161,13 @@ with map_face_mesh.FaceMesh(min_detection_confidence =0.5, min_tracking_confiden
             utils.colorBackgroundText(frame,  f'Eye Open(sec): {eopen_time}', FONTS, 0.6, (30,200),2)
             utils.colorBackgroundText(frame,  f'Eye Close(sec): {eclose_time}', FONTS, 0.6, (30,250),2)
             utils.colorBackgroundText(frame,  f'Eye Close last(sec): {last_close_sec}', FONTS, 0.6, (30,300),2)
-            utils.colorBackgroundText(frame,  f'mouth(ratio): {mouthRatio(mesh_coords, OUTER_LIP, )}', FONTS, 0.6, (30,300),2)
+            utils.colorBackgroundText(frame,  f'mouth(ratio): {mouthRatio(mesh_coords, OUTER_LIP, )}', FONTS, 0.6, (30,350),2)
+            utils.colorBackgroundText(frame,  f'mouth(ratio): {faceRatio(mesh_coords, FACE_BOUNDARY, )}', FONTS, 0.6, (30,400),2)
+            # face drawing
             cv.polylines(frame,  [np.array([mesh_coords[p] for p in LEFT_EYE ], dtype=np.int32)], True, utils.GREEN, 1, cv.LINE_AA)
             cv.polylines(frame,  [np.array([mesh_coords[p] for p in RIGHT_EYE ], dtype=np.int32)], True, utils.GREEN, 1, cv.LINE_AA)
             cv.polylines(frame,  [np.array([mesh_coords[p] for p in OUTER_LIP ], dtype=np.int32)], True, utils.GREEN, 1, cv.LINE_AA)
+            cv.polylines(frame,  [np.array([mesh_coords[p] for p in FACE_BOUNDARY ], dtype=np.int32)], True, utils.GREEN, 1, cv.LINE_AA)
         # calculating  frame per seconds FPS
         end_time = time.time()-start_time
         fps = frame_counter/end_time
