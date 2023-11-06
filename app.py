@@ -109,8 +109,8 @@ with map_face_mesh.FaceMesh(min_detection_confidence =0.5, min_tracking_confiden
 
     # starting time here 
     start_time = time.time()
-    eopen_time = 0
-    eclose_time = time.time() - eopen_time
+    eopen_time = None
+    eclose_time = None
 
     # deletable variables
     last_close_sec = 0
@@ -137,21 +137,24 @@ with map_face_mesh.FaceMesh(min_detection_confidence =0.5, min_tracking_confiden
             utils.colorBackgroundText(frame,  f'Ratio : {round(blink,2)}', FONTS, 0.7, (30,100),2, utils.PINK, utils.YELLOW)
             
             
-            if blink >5.5:
+            if blink >5:
                 CEF_COUNTER +=1
-                eclose_time = 
+
+                eclose_time = time.time() - eopen_time
+                
                 last_close_sec = eclose_time
                 # cv.putText(frame, 'Blink', (200, 50), FONTS, 1.3, utils.PINK, 2)
-                # utils.colorBackgroundText(frame,  f'Blink', FONTS, 1.7, (int(frame_height/2), 100), 2, utils.YELLOW, pad_x=6, pad_y=6, )
                 
                 
-                if eclose_time > 2.5:
+                
+                if eclose_time > 0.5:
                     utils.colorBackgroundText(frame,  f'SLEEPING!!', FONTS, 1.7, (int(frame_height/2), 200), 2, utils.YELLOW, pad_x=6, pad_y=6, )
             else:
                 eopen_time = time.time()
                 eclose_time = 0
                 
                 if CEF_COUNTER>CLOSED_EYES_FRAME:
+                    utils.colorBackgroundText(frame,  f'Blink', FONTS, 1.7, (int(frame_height/2), 100), 2, utils.YELLOW, pad_x=6, pad_y=6, )
                     TOTAL_BLINKS += 1
                     CEF_COUNTER = 0
                 
@@ -165,9 +168,8 @@ with map_face_mesh.FaceMesh(min_detection_confidence =0.5, min_tracking_confiden
 
                 
             
-            # cv.putText(frame, f'Total Blinks: {TOTAL_BLINKS}', (100, 150), FONTS, 0.6, utils.GREEN, 2)
+
             utils.colorBackgroundText(frame,  f'Total Blinks: {TOTAL_BLINKS}', FONTS, 0.6, (30,150),2)
-            utils.colorBackgroundText(frame,  f'Eyes Ratio(sec): {blink}', FONTS, 0.6, (30,200),2)
             utils.colorBackgroundText(frame,  f'Eye Close(sec): {eclose_time}', FONTS, 0.6, (30,250),2)
             utils.colorBackgroundText(frame,  f'Eye Close last(sec): {last_close_sec}', FONTS, 0.6, (30,300),2)
             utils.colorBackgroundText(frame,  f'mouth(ratio): {mouthRatio(mesh_coords, OUTER_LIP, )}', FONTS, 0.6, (30,350),2)
