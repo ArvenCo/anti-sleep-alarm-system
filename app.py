@@ -110,7 +110,7 @@ with map_face_mesh.FaceMesh(min_detection_confidence =0.5, min_tracking_confiden
     # starting time here 
     start_time = time.time()
     eopen_time = 0
-    eclose_time = 0
+    eclose_time = time.time() - eopen_time
 
     # deletable variables
     last_close_sec = 0
@@ -132,19 +132,21 @@ with map_face_mesh.FaceMesh(min_detection_confidence =0.5, min_tracking_confiden
         
         if results.multi_face_landmarks:
             mesh_coords = landmarksDetection(frame, results)
-            ratio = blinkRatio(frame, mesh_coords, RIGHT_EYE, LEFT_EYE)
+            blink = blinkRatio(frame, mesh_coords, RIGHT_EYE, LEFT_EYE)
             # cv.putText(frame, f'ratio {ratio}', (100, 100), FONTS, 1.0, utils.GREEN, 2)
-            utils.colorBackgroundText(frame,  f'Ratio : {round(ratio,2)}', FONTS, 0.7, (30,100),2, utils.PINK, utils.YELLOW)
+            utils.colorBackgroundText(frame,  f'Ratio : {round(blink,2)}', FONTS, 0.7, (30,100),2, utils.PINK, utils.YELLOW)
             
             
-            if ratio >5:
+            if blink >5.5:
                 CEF_COUNTER +=1
-                eclose_time = time.time() - eopen_time
+                eclose_time = 
                 last_close_sec = eclose_time
                 # cv.putText(frame, 'Blink', (200, 50), FONTS, 1.3, utils.PINK, 2)
                 # utils.colorBackgroundText(frame,  f'Blink', FONTS, 1.7, (int(frame_height/2), 100), 2, utils.YELLOW, pad_x=6, pad_y=6, )
                 
-                print(eclose_time)
+                
+                if eclose_time > 2.5:
+                    utils.colorBackgroundText(frame,  f'SLEEPING!!', FONTS, 1.7, (int(frame_height/2), 200), 2, utils.YELLOW, pad_x=6, pad_y=6, )
             else:
                 eopen_time = time.time()
                 eclose_time = 0
@@ -153,12 +155,19 @@ with map_face_mesh.FaceMesh(min_detection_confidence =0.5, min_tracking_confiden
                     TOTAL_BLINKS += 1
                     CEF_COUNTER = 0
                 
-                if eclose_time > 2.5:
-                    utils.colorBackgroundText(frame,  f'AYAWG KATOG!!', FONTS, 1.7, (int(frame_height/2), 200), 2, utils.YELLOW, pad_x=6, pad_y=6, )
+                
+            
+            if mouthRatio(mesh_coords, OUTER_LIP, ) < 1: 
+                utils.colorBackgroundText(frame,  f'Yawning!!', FONTS, 1.7, (int(frame_height/2), 200), 2, utils.YELLOW, pad_x=6, pad_y=6, )
+            
+            if faceRatio(mesh_coords, FACE_BOUNDARY) > 0.9: 
+                utils.colorBackgroundText(frame,  f'!!!', FONTS, 1.7, (int(frame_height/2), 200), 2, utils.YELLOW, pad_x=6, pad_y=6, )
 
+                
+            
             # cv.putText(frame, f'Total Blinks: {TOTAL_BLINKS}', (100, 150), FONTS, 0.6, utils.GREEN, 2)
             utils.colorBackgroundText(frame,  f'Total Blinks: {TOTAL_BLINKS}', FONTS, 0.6, (30,150),2)
-            utils.colorBackgroundText(frame,  f'Eye Open(sec): {eopen_time}', FONTS, 0.6, (30,200),2)
+            utils.colorBackgroundText(frame,  f'Eyes Ratio(sec): {blink}', FONTS, 0.6, (30,200),2)
             utils.colorBackgroundText(frame,  f'Eye Close(sec): {eclose_time}', FONTS, 0.6, (30,250),2)
             utils.colorBackgroundText(frame,  f'Eye Close last(sec): {last_close_sec}', FONTS, 0.6, (30,300),2)
             utils.colorBackgroundText(frame,  f'mouth(ratio): {mouthRatio(mesh_coords, OUTER_LIP, )}', FONTS, 0.6, (30,350),2)
@@ -168,6 +177,10 @@ with map_face_mesh.FaceMesh(min_detection_confidence =0.5, min_tracking_confiden
             cv.polylines(frame,  [np.array([mesh_coords[p] for p in RIGHT_EYE ], dtype=np.int32)], True, utils.GREEN, 1, cv.LINE_AA)
             cv.polylines(frame,  [np.array([mesh_coords[p] for p in OUTER_LIP ], dtype=np.int32)], True, utils.GREEN, 1, cv.LINE_AA)
             cv.polylines(frame,  [np.array([mesh_coords[p] for p in FACE_BOUNDARY ], dtype=np.int32)], True, utils.GREEN, 1, cv.LINE_AA)
+        else:
+            utils.colorBackgroundText(frame,  f'NO FACE DETECTED', FONTS, 1.7, (int(frame_height/2), 200), 2, utils.YELLOW, pad_x=6, pad_y=6, )
+
+
         # calculating  frame per seconds FPS
         end_time = time.time()-start_time
         fps = frame_counter/end_time
