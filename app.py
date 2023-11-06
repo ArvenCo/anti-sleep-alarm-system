@@ -109,10 +109,11 @@ with map_face_mesh.FaceMesh(min_detection_confidence =0.5, min_tracking_confiden
 
     # starting time here 
     start_time = time.time()
-   
+    
     
 
     # other variables
+    start_minute = time.time()
     blink_per_minute= 0
     eopen_time = 0
     eclose_time = 0
@@ -162,13 +163,13 @@ with map_face_mesh.FaceMesh(min_detection_confidence =0.5, min_tracking_confiden
 
 
             # Blink per minute
-            elapsed_time = time.time() - start_time
+            elapsed_time = time.time() - start_minute
             if elapsed_time >= 60:
                 blink_per_minute = (TOTAL_BLINKS / elapsed_time) * 60
                 
                 TOTAL_BLINKS = 0
                 CEF_COUNTER = 0
-                start_time = time.time()
+                start_minute = time.time()
 
             
             utils.colorBackgroundText(frame,  f'Blink/min: {blink_per_minute}', FONTS, 0.6, (30,200),2)
