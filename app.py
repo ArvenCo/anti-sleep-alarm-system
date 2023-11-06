@@ -109,10 +109,13 @@ with map_face_mesh.FaceMesh(min_detection_confidence =0.5, min_tracking_confiden
 
     # starting time here 
     start_time = time.time()
-    eopen_time = None
-    eclose_time = None
+   
+    
 
-    # deletable variables
+    # other variables
+    blink_per_minute= 0
+    eopen_time = 0
+    eclose_time = 0
     last_close_sec = 0
 
     # starting Video loop here.
@@ -136,12 +139,11 @@ with map_face_mesh.FaceMesh(min_detection_confidence =0.5, min_tracking_confiden
             # cv.putText(frame, f'ratio {ratio}', (100, 100), FONTS, 1.0, utils.GREEN, 2)
             utils.colorBackgroundText(frame,  f'Ratio : {round(blink,2)}', FONTS, 0.7, (30,100),2, utils.PINK, utils.YELLOW)
             
-            
+            # blinking 
             if blink >5:
                 CEF_COUNTER +=1
 
                 eclose_time = time.time() - eopen_time
-                
                 last_close_sec = eclose_time
                 # cv.putText(frame, 'Blink', (200, 50), FONTS, 1.3, utils.PINK, 2)
                 
@@ -157,7 +159,19 @@ with map_face_mesh.FaceMesh(min_detection_confidence =0.5, min_tracking_confiden
                     utils.colorBackgroundText(frame,  f'Blink', FONTS, 1.7, (int(frame_height/2), 100), 2, utils.YELLOW, pad_x=6, pad_y=6, )
                     TOTAL_BLINKS += 1
                     CEF_COUNTER = 0
+
+
+            # Blink per minute
+            elapsed_time = time.time() - start_time
+            if elapsed_time >= 60:
+                blink_per_minute = (TOTAL_BLINKS / elapsed_time) * 60
                 
+                TOTAL_BLINKS = 0
+                CEF_COUNTER = 0
+                start_time = time.time()
+
+            
+            utils.colorBackgroundText(frame,  f'Blink/min: {blink_per_minute}', FONTS, 0.6, (30,200),2)
                 
             
             if mouthRatio(mesh_coords, OUTER_LIP, ) < 1: 
