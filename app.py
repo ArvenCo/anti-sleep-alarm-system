@@ -1,6 +1,7 @@
 from imports import *
 from server.routes import *
 app = Flask(__name__)
+app.config['SECRET_KEY'] = 'secret!'
 
 app.register_blueprint(sys)
 
