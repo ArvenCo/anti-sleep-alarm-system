@@ -24,7 +24,7 @@ def process(frame):
             data = {
                 'eye': eyesRatio(mesh_coords),
                 'mouth': mouthRatio(mesh_coords),
-                'img_marks': matt_to_base64(frame)
+                # 'img_marks': matt_to_base64(frame)
             }
             return data
         

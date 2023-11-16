@@ -60,3 +60,8 @@ def mouthRatio(landmarks):
     mv_bottom = landmarks[17]
     return euclaideanDistance(mh_right, mh_left, True) / euclaideanDistance(mv_top, mv_bottom, True)
 
+def eyesRatio_que(landmarks, que: Queue):
+    que.put(eyesRatio(landmarks))
+
+def mouthRatio_que(landmarks, que: Queue):
+    que.put(mouthRatio(landmarks))

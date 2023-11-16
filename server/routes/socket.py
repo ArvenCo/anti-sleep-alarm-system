@@ -1,6 +1,6 @@
 from imports import *
 from server.controller.system import *
-socketio = SocketIO(cors_allowed_origins=['http://127.0.0.1:5500'])
+socketio = SocketIO(cors_allowed_origins=['http://127.0.0.1:5500','http://192.168.1.5:5500'])
 
 
 
@@ -16,3 +16,4 @@ def camera_stream(frame):
     })
     # Send the processed frame back to the client
     emit('camera_stream_response', data)
+
