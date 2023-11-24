@@ -14,6 +14,16 @@ def camera_stream(frame):
     data.update({
         'img': matt_to_base64(matt_img)
     })
+
+    if float(data['eye']) > 5:
+        emit('notif-eye', data['eye']) 
+
+    if float(data['mouth']) < 1:
+        emit('notif-mouth', data['mouth'])
+        
+    if float(data['face']) > 1:
+        emit('notif-face', data['face'])
+
     # Send the processed frame back to the client
     emit('camera_stream_response', data)
 

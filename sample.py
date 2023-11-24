@@ -97,11 +97,8 @@ def mouthRatio(landmarks, indices):
 def faceRatio(landmarks, indices):
     fh_right = landmarks[indices[8]]
     fh_left = landmarks[indices[28]]
-    
     fv_top = landmarks[indices[0]]
     fv_bottom = landmarks[indices[18]]
-
-    
     return euclaideanDistance(fh_right, fh_left) / euclaideanDistance(fv_top, fv_bottom)
 
 
