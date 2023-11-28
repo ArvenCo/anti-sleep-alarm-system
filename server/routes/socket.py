@@ -1,14 +1,16 @@
 from imports import *
 from server.controller.system import *
-socketio = SocketIO(cors_allowed_origins=['http://127.0.0.1:5500','http://192.168.1.5:5500'])
+socketio = SocketIO(cors_allowed_origins="*")
 
 
 
+    
 
 @socketio.on('camera_stream')
-def camera_stream(frame):
-    # Process the frame (you can perform additional processing here)
-    matt_img= base64_to_matt(frame)
+def camera_stream(json):
+
+    
+    matt_img= base64_to_matt(json['frame'])
     data = process(matt_img)
     
     data.update({
@@ -16,14 +18,14 @@ def camera_stream(frame):
     })
 
     if float(data['eye']) > 5:
-        emit('notif-eye', data['eye']) 
+        emit('notif-eye', data['eye'], broadcast=True) 
 
     if float(data['mouth']) < 1:
-        emit('notif-mouth', data['mouth'])
+        emit('notif-mouth', data['mouth'], broadcast=True)
         
     if float(data['face']) > 1:
-        emit('notif-face', data['face'])
+        emit('notif-face', data['face'], broadcast=True)
 
     # Send the processed frame back to the client
-    emit('camera_stream_response', data)
+    emit('camera_stream_response', data, broadcast=True)
 
