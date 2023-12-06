@@ -6,22 +6,47 @@ import server.controller.events as EventController
 socketio = SocketIO(cors_allowed_origins="*")
 
 
+@socketio.on('stream')
+def stream(data):
+    print(data)
 
+@socketio.on('event_name')
+def event_name(data):
+    print(data)
+
+@socketio.on('connect')
+def connect(data):
+    print(f"Client Connected: {data}")
+
+@socketio.on('disconnect')
+def disconnect(data):
+    print(f"Client Disconnected: {data}")
 
 @socketio.on('camera_stream')
-def camera_stream(json):
+def camera_stream(data):
 
-    matt_img= base64_to_matt(json['frame'])
+    matt_img= base64_to_matt(data['frame'])
     data = process(matt_img)
-    user = UserController.insert(json['user'])
+    # user = UserController.insert()
     
     data.update({
         'img': matt_to_base64(matt_img)
     })
-    
+    open_eye = 0
+
     if float(data['eye']) > 5:
-        
         emit('notif-eye', data['eye'], broadcast=True) 
+        close_eye = time.time() - open_eye
+        if close_eye > 0.5:
+            # eyes closed 
+            pass
+        else:
+            # blinking
+            pass
+    else:    
+        open_eye = time.time() 
+        
+       
 
     if float(data['mouth']) < 1:
         emit('notif-mouth', data['mouth'], broadcast=True)
