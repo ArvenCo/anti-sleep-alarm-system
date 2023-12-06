@@ -3,19 +3,17 @@ from server.controller.system import *
 import server.controller.users as UserController
 import server.controller.events as EventController
 
-socketio = SocketIO(cors_allowed_origins="*")
+socketio = SocketIO(cors_allowed_origins="*", logger=True, engineio_logger=True)
 
 
 @socketio.on('stream')
 def stream(data):
     print(data)
 
-@socketio.on('event_name')
-def event_name(data):
-    print(data)
 
 @socketio.on('connect')
 def connect(data):
+    emit('connect',"Client Connected.")
     print(f"Client Connected: {data}")
 
 @socketio.on('disconnect')
