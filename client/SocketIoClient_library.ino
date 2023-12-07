@@ -138,21 +138,23 @@ esp_err_t init_camera() {
 
 void camera_capture(){
     //capture a frame
-    camera_fb_t * fb = esp_camera_fb_get();
-    if (!fb) {
-        Serial.println("img capture failed");
+    while(true){
+      camera_fb_t * fb = esp_camera_fb_get();
+      if (!fb) {
+          Serial.println("img capture failed");
+        esp_camera_fb_return(fb);
+        ESP.restart();
+      }
+
+      String payload = "{\"frame\":\"data:image/jpeg;base64," + String(b64.encode(fb->buf, fb->len)) + "\"}";
+      
+      webSocket.emit("camera_stream", payload.c_str());
+
+
+      //return the frame buffer back to be reused
       esp_camera_fb_return(fb);
-      ESP.restart();
+      delay(1000/10);
     }
-
-    String payload = "{\"frame\":" + String(b64.encode(fb->buf, fb->len)) + "}";
-    
-    webSocket.emit("camera_stream", payload.c_str());
-
-
-    //return the frame buffer back to be reused
-    esp_camera_fb_return(fb);
-
     
 }
 
@@ -213,11 +215,13 @@ void setup() {
   webSocket.emit("stream", "{\"message\":\"hello1\"}");
   init_camera();
 
+  camera_capture();
+
 }
 
 void loop() {
   
   webSocket.loop();
   // checkLEDState();
-  camera_capture();
+  
 }
