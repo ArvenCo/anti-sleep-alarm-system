@@ -211,7 +211,7 @@ void setup() {
     webSocket.setAuthorization(serverUsername, serverPassword);
   }
   webSocket.emit("stream", "{\"message\":\"hello1\"}");
-  init_camera();
+
 
 }
 

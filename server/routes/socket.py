@@ -23,6 +23,7 @@ def disconnect(data):
 @socketio.on('camera_stream')
 def camera_stream(data):
 
+    print(data)
     matt_img= base64_to_matt(data['frame'])
     data = process(matt_img)
     # user = UserController.insert()
@@ -33,7 +34,7 @@ def camera_stream(data):
     open_eye = 0
 
     if float(data['eye']) > 5:
-        emit('notif-eye', data['eye'], broadcast=True) 
+        emit('response', data['eye'], broadcast=True) 
         close_eye = time.time() - open_eye
         if close_eye > 0.5:
             # eyes closed 
@@ -41,17 +42,16 @@ def camera_stream(data):
         else:
             # blinking
             pass
-    else:    
+    else:
         open_eye = time.time() 
-        
-       
 
     if float(data['mouth']) < 1:
-        emit('notif-mouth', data['mouth'], broadcast=True)
+        emit('response', data['mouth'], broadcast=True)
         
     if float(data['face']) > 1:
-        emit('notif-face', data['face'], broadcast=True)
+        emit('response', data['face'], broadcast=True)
 
+    
     # Send the processed frame back to the client
     emit('camera_stream_response', data, broadcast=True)
 
