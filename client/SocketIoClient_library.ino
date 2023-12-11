@@ -4,6 +4,7 @@
 #include "esp_camera.h"
 #include "esp_timer.h"
 #include <base64.h>
+#include <AsyncTimer.h>
 /////////////////////////////////////
 ////// USER DEFINED VARIABLES //////
 ///////////////////////////////////
@@ -23,7 +24,7 @@
 #define VSYNC_GPIO_NUM    25
 #define HREF_GPIO_NUM     23
 #define PCLK_GPIO_NUM     22
-
+#define FPS               24
 /// WIFI Settings ///
 const char* ssid     = "PLDTHOMEFIBR3b578";
 const char* password = "PLDTWIFIsb5e7";
@@ -50,6 +51,7 @@ int buttonPin = 0;
 SocketIoClient webSocket;
 WiFiClient client;
 base64 b64;
+AsyncTimer t;
 
 bool LEDState = false;
 
@@ -137,25 +139,19 @@ esp_err_t init_camera() {
 
 
 void camera_capture(){
-    //capture a frame
-    while(true){
-      camera_fb_t * fb = esp_camera_fb_get();
-      if (!fb) {
-          Serial.println("img capture failed");
-        esp_camera_fb_return(fb);
-        ESP.restart();
-      }
+  //capture a frame
+  camera_fb_t * fb = esp_camera_fb_get();
+  if (!fb) {
+      Serial.println("img capture failed");
+    esp_camera_fb_return(fb);
+    ESP.restart();
+  }
 
-      String payload = "{\"frame\":\"data:image/jpeg;base64," + String(b64.encode(fb->buf, fb->len)) + "\"}";
-      
-      webSocket.emit("camera_stream", payload.c_str());
-
-
-      //return the frame buffer back to be reused
-      esp_camera_fb_return(fb);
-      delay(1000/10);
-    }
-    
+  String payload = "{\"frame\":\"data:image/jpeg;base64," + String(b64.encode(fb->buf, fb->len)) + "\"}";
+  
+  webSocket.emit("camera_stream", payload.c_str());
+  //return the frame buffer back to be reused
+  esp_camera_fb_return(fb);
 }
 
 
@@ -214,14 +210,21 @@ void setup() {
   }
   webSocket.emit("stream", "{\"message\":\"hello1\"}");
   init_camera();
+  
+  t.setInterval([]() {
+    Serial.print("*");
+    if (webSocket.isConnected()){
+      camera_capture();
+    }
+    
+  }, 1000);
 
-  camera_capture();
-
+  t.setInterval([](){
+    webSocket.loop();
+  },1);
 }
-
 void loop() {
   
-  webSocket.loop();
-  // checkLEDState();
+  t.handle();
   
 }
