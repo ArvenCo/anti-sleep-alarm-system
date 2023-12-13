@@ -13,7 +13,8 @@ def stream(data):
         has_frame, frame = video.read()
         if has_frame:
             data = process(frame)
-            emit("response", data)
+            if data:
+                emit("response", data)
             
 
 

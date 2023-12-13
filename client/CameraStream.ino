@@ -40,7 +40,7 @@ const char* password = "PLDTWIFIsb5e7";
 char host[] = "192.168.1.7"; // Socket.IO Server Address
 int port = 5000; // Socket.IO Port Address
 char path[] = "/socket.io/?EIO=4&transport=websocket"; // Socket.IO Base Path
-
+bool ov2640 = false
 void startCameraServer();
 void setupLedFlash(int pin);
 
@@ -170,7 +170,13 @@ void setup() {
   // listening from server 
   webSocket.on("connect", socket_connected);
   webSocket.on("response", socket_response);
-  String link = "http://"+WiFi.localIP().toString()+":91/stream";
+  String link;
+  if (ov2640){
+    link = "http://"+WiFi.localIP().toString()+":91/stream";
+  }else{
+    link = "http://"+ host +":91/stream";
+  }
+   
   // emit stream link
   String payload = "{\"link\":\""+ link +"\"}";
   webSocket.emit("stream", payload.c_str());
