@@ -1,5 +1,4 @@
 from imports import *
-import utils
 
 map_face_mesh = mp.solutions.face_mesh
 
@@ -19,7 +18,8 @@ def landmarksDetection(img, results):
 def euclaideanDistance(point, point1, zero=False):
     x, y = point
     x1, y1 = point1
-    return math.sqrt((x1 - x)**2 + (y1 - y)**2)
+    result = math.sqrt((x1 - x)**2 + (y1 - y)**2)
+    return result
 
 def eyesRatio(landmarks):
     # Right eyes 

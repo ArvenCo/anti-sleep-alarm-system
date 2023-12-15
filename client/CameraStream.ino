@@ -1,6 +1,7 @@
 #include "esp_camera.h"
 #include <WiFi.h>
 #include <SocketIoClient.h>
+#include <BlinkControl.h>
 //
 // WARNING!!! PSRAM IC required for UXGA resolution and high JPEG quality
 //            Ensure ESP32 Wrover Module or other board with PSRAM is selected
@@ -40,11 +41,12 @@ const char* password = "PLDTWIFIsb5e7";
 char host[] = "192.168.1.7"; // Socket.IO Server Address
 int port = 5000; // Socket.IO Port Address
 char path[] = "/socket.io/?EIO=4&transport=websocket"; // Socket.IO Base Path
-bool ov2640 = false
+bool ov2640 = false;
 void startCameraServer();
 void setupLedFlash(int pin);
 
 SocketIoClient webSocket;
+BlinkControl led(33);
 
 void socket_connected(const char * payload, size_t length) {
   Serial.print("Socket.IO Connected!: ");
@@ -54,10 +56,18 @@ void socket_connected(const char * payload, size_t length) {
 void socket_response(const char * payload, size_t length) {
   Serial.print("Response: ");
   Serial.println(payload);
+  if( String(payload) == "No face deteceted"){
+    Serial.println("LED Blinking!");
+    led.breathe();
+  }else{
+    
+  }
+  
 }
 
 void setup() {
   Serial.begin(115200);
+  led.begin();
   Serial.setDebugOutput(true);
   Serial.println();
 
@@ -174,7 +184,7 @@ void setup() {
   if (ov2640){
     link = "http://"+WiFi.localIP().toString()+":91/stream";
   }else{
-    link = "http://"+ host +":91/stream";
+    link = "http://"+ String(host) +":"+ String(port) +"/stream";
   }
    
   // emit stream link
@@ -186,4 +196,5 @@ void setup() {
 void loop() {
   // Do nothing. Everything is done in another task by the web server
   webSocket.loop();
+  led.loop();
 }

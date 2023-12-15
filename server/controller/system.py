@@ -19,30 +19,54 @@ def process(frame):
         rgb_frame = cv.cvtColor(frame, cv.COLOR_RGB2BGR)
         results  = face_mesh.process(rgb_frame)
 
+
         if results.multi_face_landmarks:
             mesh_coords = landmarksDetection(frame, results)
-            data = dict()
-            
-            if eyesRatio(mesh_coords) < 5 and distance(session.get("eye_time", time.time() - 1), time.time()) <= 1:
+            data = ""
+            int_session("TOTAL_BLINKS")
 
-
-                int_session("eye_elap_time", distance(session.get("eye_time", time.time() - 1), time.time())) 
-                if session["eye_elap_time"] >= 60:
-                    bpm = (session["blink"] / session["eye_elap_time"]) * 60    
-                    if bpm <= 5:
-                        data["eye_status"] = "DROWSY" 
+            # blinking 
+            if eyesRatio(mesh_coords) >5:
+                int_session("CEF_COUNTER", 1)
+                print("blink")
+                session["eclose_time"] = time.time() - session["eopen_time"]
                 
-                   
-                session["eye_time"] = time.time()
+                last_close_sec = session["eclose_time"]
+                # cv.putText(frame, 'Blink', (200, 50), FONTS, 1.3, utils.PINK, 2)
+                
+                
+                if session["eclose_time"] > 0.5:
+                    data = "Sleeping"
+                    # utils.colorBackgroundText(frame,  f'SLEEPING!!', FONTS, 1.7, (int(frame_height/2), 200), 2, utils.YELLOW, pad_x=6, pad_y=6, )
             else:
-                int_session("blink", 1)
-                data["eye_status"] = "Blinked"
-                print("blinked")
+                session["eopen_time"] = time.time()
+                session["eclose_time"] = 0
+                
+                if session.get("CEF_COUNTER", 0)>2:
+                    # utils.colorBackgroundText(frame,  f'Blink', FONTS, 1.7, (int(frame_height/2), 100), 2, utils.YELLOW, pad_x=6, pad_y=6, )
+                    data = "Blinked"
+                    session["TOTAL_BLINKS"] += 1
+                    session["CEF_COUNTER"] = 0
+
+
+            # Blink per minute
+            session["elapsed_time"] = time.time() - session["start_minute"]
+            if session["elapsed_time"] >= 60:
+                blink_pm = (session["TOTAL_BLINKS"] / session["elapsed_time"]) * 60
+                
+                session["TOTAL_BLINKS"] = 0
+                session["CEF_COUNTER"] = 0
+                session["start_minute"] = time.time()
+                if blink_pm <= 5:
+                    data = "Drowsy"
+                else:
+                    data = "Active"
 
                 
             
-            if mouthRatio(mesh_coords) > 1 and "mouth_time" not in session or distance(int_session("mouth_time"), time.time()) < .5:
+            if mouthRatio(mesh_coords) < 1 :
                 session["mouth_time"] = time.time()
+                data = "Yawning"
             
             
             
@@ -54,7 +78,8 @@ def process(frame):
             # })
             return data
         
-        else: return {'message' :"No face deteceted!!"}
+        else: 
+            return "No face deteceted"
 
 def distance(start, current):
     return current - start
