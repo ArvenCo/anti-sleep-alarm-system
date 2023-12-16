@@ -73,18 +73,10 @@ void setup() {
   // start websocket
   webSocket.begin(host, port, path);
 
+  stream_link = "http://" + String(host) + ":" + String(port) + "/stream";
+
   webSocket.on("connect", socket_connected);
   webSocket.on("response", socket_response);
-
-  if (false) {
-    stream_link = "http://" + WiFi.localIP().toString() + ":91/stream";
-  } else {
-    stream_link = "http://" + String(host) + ":" + String(port) + "/stream";
-  }
-
-  // emit stream link
-  // String payload = "{\"link\":\"" + link + "\"}";
-  // webSocket.emit("stream", payload.c_str());
 }
 
 

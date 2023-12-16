@@ -7,7 +7,7 @@ def base64_to_matt(img_base64: str):
     return cv.imdecode(nparr, cv.IMREAD_COLOR)
 
 
-EYE_START = time.time()
+
 def process(frame):
     with map_face_mesh.FaceMesh(min_detection_confidence =0.5, min_tracking_confidence=0.5) as face_mesh:
         
@@ -70,12 +70,6 @@ def process(frame):
             
             
             
-            # data.update({
-            #     'eye': eyesRatio(mesh_coords),
-            #     'mouth': mouthRatio(mesh_coords),
-            #     'face': faceRatio(mesh_coords),
-            #     'eye_true?' : session["eye_elap_time"]
-            # })
             return data
         
         else: 

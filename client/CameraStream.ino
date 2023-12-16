@@ -1,7 +1,6 @@
 #include "esp_camera.h"
 #include <WiFi.h>
 #include <SocketIoClient.h>
-#include <BlinkControl.h>
 //
 // WARNING!!! PSRAM IC required for UXGA resolution and high JPEG quality
 //            Ensure ESP32 Wrover Module or other board with PSRAM is selected
@@ -36,38 +35,93 @@
 // ===========================
 // Enter your WiFi credentials
 // ===========================
-const char* ssid = "PLDTHOMEFIBR3b578";
-const char* password = "PLDTWIFIsb5e7";
+const char* ssid = "ssid";
+const char* password = "password";
+
+
+/// Socket.IO Settings ///
 char host[] = "192.168.1.7"; // Socket.IO Server Address
 int port = 5000; // Socket.IO Port Address
 char path[] = "/socket.io/?EIO=4&transport=websocket"; // Socket.IO Base Path
 bool ov2640 = false;
+
+
 void startCameraServer();
 void setupLedFlash(int pin);
 
 SocketIoClient webSocket;
-BlinkControl led(33);
 
-void socket_connected(const char * payload, size_t length) {
-  Serial.print("Socket.IO Connected!: ");
-  Serial.println(payload);
+bool buzzDrowsy = false;
+bool buzzSleeping = false;
+bool buzzYawning = false;
+bool buzzNoFace = false;
+String stream_link = "";
+
+void socket_response(const char* payload, size_t length) {
+  Serial.print("Response: ");
+  
+  if (String(payload)== "Drowsy"){
+    Serial.println(payload);
+    buzzDrowsy = true;
+  }  if (String(payload)== "Sleeping"){
+    Serial.println(payload);
+    buzzSleeping = true;
+  } if (String(payload)== "Yawning"){
+    Serial.println(payload);
+    buzzYawning = true;
+  }
+  if (String(payload) == "No face deteceted") {
+    Serial.println(payload);
+    buzzNoFace = true;
+  } 
 }
 
-void socket_response(const char * payload, size_t length) {
-  Serial.print("Response: ");
+void socket_connected(const char* payload, size_t length) {
+  Serial.print("Socket.IO Connected!: ");
   Serial.println(payload);
-  if( String(payload) == "No face deteceted"){
-    Serial.println("LED Blinking!");
-    led.breathe();
-  }else{
-    
-  }
   
+  String pay = "{\"link\":\"" + stream_link + "\"}";
+  webSocket.emit("stream", pay.c_str());
+}
+
+bool buzzer(bool buzzerOn = false,int frequency = 1000, int duration = 5){
+  static unsigned long previousBuzzerMillis = 0;
+  static int buzzerState = LOW;
+  static int buzzerCount = 0;
+  unsigned long currentMillis = millis();
+  if (currentMillis - previousBuzzerMillis > frequency) {
+    previousBuzzerMillis = currentMillis;
+
+    if (buzzerOn) {
+      if (buzzerState == LOW) {
+        buzzerState = HIGH;
+      } else {
+        buzzerState = LOW;
+      }
+
+      Serial.print("Buzzer State: ");
+      Serial.println(buzzerState);
+      digitalWrite(13, buzzerState);
+      buzzerCount += 1;
+    }
+
+    if (buzzerCount > duration*2) {
+      buzzerOn = false;
+      digitalWrite(13, LOW);
+      buzzerCount = 0;
+
+
+    }
+
+    Serial.println(buzzerOn);
+  }
+  return buzzerOn;
 }
 
 void setup() {
   Serial.begin(115200);
-  led.begin();
+  pinMode(13, OUTPUT); //buzzer pin
+
   Serial.setDebugOutput(true);
   Serial.println();
 
@@ -180,21 +234,33 @@ void setup() {
   // listening from server 
   webSocket.on("connect", socket_connected);
   webSocket.on("response", socket_response);
-  String link;
   if (ov2640){
-    link = "http://"+WiFi.localIP().toString()+":91/stream";
+    stream_link = "http://"+WiFi.localIP().toString()+":91/stream";
   }else{
-    link = "http://"+ String(host) +":"+ String(port) +"/stream";
+    stream_link = "http://"+ String(host) +":"+ String(port) +"/stream";
   }
-   
-  // emit stream link
-  String payload = "{\"link\":\""+ link +"\"}";
-  webSocket.emit("stream", payload.c_str());
   
 }
+
+
+
 
 void loop() {
   // Do nothing. Everything is done in another task by the web server
   webSocket.loop();
-  led.loop();
+  if(buzzYawning){
+    buzzYawning = buzzer(buzzYawning, 300, 4);
+  }
+  if(buzzNoFace){
+    buzzNoFace = buzzer(buzzNoFace, 100);
+  }
+  if (buzzDrowsy){
+    buzzDrowsy = buzzer(buzzDrowsy, 500, 2);
+
+  }
+  if (buzzSleeping){
+    buzzSleeping = buzzer(buzzSleeping, 800);
+  }
 }
+
+
