@@ -7,17 +7,17 @@ A system for a drowsy drivers. This project includes a Flask Server and an IOT C
 
 For installation first download this project to the necessary folder location. 
 
-### Server
+### Server Side Setup
 
 Open a terminal on the project directory and create a python virtual environment(venv) and run the venv.
 
 ```bash
-  cd anti-sleeping-system
+  cd anti-sleep-alarm-system
   py -3 -m venv .venv
   .venv\Scripts\activate
 ```
 
-If done correctly, a you can see a ` (.venv)  ` at the beggining on your directory. Indicating that you are running the current directory with a virtual environment.
+If done correctly, you can see a ` (.venv)  ` at the beggining on your directory. Indicating that you are running the current directory with a virtual environment.
 
 ![App Screenshot](https://www.c-sharpcorner.com/article/steps-to-set-up-a-virtual-environment-for-python-development/Images/venv.png)
 
@@ -32,7 +32,7 @@ py app.py
 ```  
 
 
-### Client 
+### Client Side Setup
 
 Start by oppening Arduino IDE. Go to `Tools` then select the `ESP32` Board. And from the list select `AI-Thinker ESP32-CAM`.
 
